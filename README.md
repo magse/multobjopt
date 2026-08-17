@@ -10,6 +10,10 @@
 > from OpenAI Codex using the GPT model `gpt-5.6-sol` at the `ultra`
 > reasoning-effort level.
 
+> **Merged projects:** The code in this library is a GPT assisted merge from
+> three previous 10+ years old in-house and public projects related to optimization
+> algorithms.
+
 `multobjopt` is a dependency-free C++20 library for bounded, constrained,
 multi-objective engineering optimization. A problem is assembled from scalar
 parameters, objective functions, restriction functions, and an optional final
