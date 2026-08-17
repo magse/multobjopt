@@ -1,0 +1,64 @@
+#ifndef MULTOBJOPT_VERSION_HPP
+#define MULTOBJOPT_VERSION_HPP
+
+#include <string_view>
+
+/**
+ * @file version.hpp
+ * @brief Compile-time multobjopt library and Git version information.
+ *
+ * CMake generates this header for every build. When the project root is a Git
+ * checkout with a commit, library_version uses `git describe --tags --always`
+ * and adds a `-dirty` suffix for local changes. Source archives and vendored
+ * copies without their own `.git` entry fall back to the semantic CMake project
+ * version.
+ */
+
+namespace multobjopt::version {
+
+/** @brief Semantic major version declared by the CMake project. */
+inline constexpr int major = @multobjopt_project_version_major@;
+
+/** @brief Semantic minor version declared by the CMake project. */
+inline constexpr int minor = @multobjopt_project_version_minor@;
+
+/** @brief Semantic patch version declared by the CMake project. */
+inline constexpr int patch = @multobjopt_project_version_patch@;
+
+/**
+ * @brief Stable semantic version declared by the CMake project.
+ *
+ * Unlike library_version, this value does not contain Git commit or dirty-tree
+ * information and is therefore suitable for semantic compatibility checks.
+ */
+inline constexpr std::string_view semantic_version{"@multobjopt_project_version_cpp@"};
+
+/**
+ * @brief Most descriptive available version string for this library build.
+ *
+ * This is git_description when from_git is true, otherwise semantic_version.
+ */
+inline constexpr std::string_view library_version{"@multobjopt_library_version_cpp@"};
+
+/** @brief True when Git metadata was read from a valid HEAD commit. */
+inline constexpr bool from_git = @multobjopt_version_from_git@;
+
+/**
+ * @brief Output of `git describe --tags --always`, including `-dirty` when needed.
+ *
+ * The value is empty when from_git is false.
+ */
+inline constexpr std::string_view git_description{"@multobjopt_git_description_cpp@"};
+
+/** @brief Full Git commit identifier, or an empty view when unavailable. */
+inline constexpr std::string_view git_commit{"@multobjopt_git_commit_cpp@"};
+
+/** @brief Git branch name, `HEAD` when detached, or an empty view when unavailable. */
+inline constexpr std::string_view git_branch{"@multobjopt_git_branch_cpp@"};
+
+/** @brief True when tracked or untracked working-tree changes were detected. */
+inline constexpr bool git_dirty = @multobjopt_git_dirty@;
+
+} // namespace multobjopt::version
+
+#endif

@@ -1,0 +1,61 @@
+/**
+@mainpage multobjopt
+
+@section overview Overview
+
+multobjopt solves bounded engineering design problems with one or more scalar
+objectives, scalar restrictions, and an optional coupled validation callback.
+It provides simulated annealing, a Pareto-aware genetic algorithm, Box's
+complex method, projected numerical-gradient descent, and structural automatic
+selection. The public API is declared in the @ref multobjopt namespace.
+
+@section model Problem model
+
+- Add between 1 and 25 named bounded parameters with
+  multobjopt::problem::add_parameter(). A zero resolution is continuous; a
+  positive resolution quantizes the parameter.
+- Add minimizing or maximizing functions with
+  multobjopt::problem::add_objective(). Positive weights define the scalarized
+  ordering, while objective senses define Pareto dominance.
+- Add restrictions with multobjopt::problem::add_restriction(). A value greater
+  than or equal to zero is feasible; a negative value is a violation.
+- Optionally use multobjopt::problem::set_validation() for final acceptance
+  based on all objective and restriction results.
+
+@section running Running an optimization
+
+Configure multobjopt::optimizer_options and pass the problem to
+multobjopt::optimize(). The returned multobjopt::optimization_result contains
+the scalarized best design, every feasible nondominated design retained in the
+Pareto archive, the actual algorithm used, and run statistics.
+
+A result with no accepted candidate uses
+multobjopt::termination_reason::no_feasible_design. The
+multobjopt::evaluated_design::valid flag distinguishes a finite but
+constraint-infeasible analysis from a non-finite model result. Restriction
+scales can normalize violation magnitudes measured in different engineering
+units.
+
+@code{.cpp}
+multobjopt::optimizer_options options;
+options.algorithm = multobjopt::optimization_algorithm::automatic;
+options.max_evaluations = 10'000;
+
+const auto result = multobjopt::optimize(problem_definition, options);
+for (const auto& design : result.pareto_front) {
+    // Inspect design.parameters, design.objectives, and design.restrictions.
+}
+@endcode
+
+See the repository README and the current programs under `examples/` for a
+growing collection of complete buildable examples.
+
+@section headers Public header layout
+
+Applications can include `multobjopt/multobjopt.hpp` for the complete API.
+Focused self-contained headers are also available: `types.hpp`, `problem.hpp`,
+`options.hpp`, `result.hpp`, `evaluation.hpp`, and `optimize.hpp`. Their file
+documentation describes callback lifetimes, units, validation, feasibility,
+and result ownership in detail. Generated `version.hpp` exposes the semantic
+version and, when available, Git description, commit, branch, and dirty state.
+*/
