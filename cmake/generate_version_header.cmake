@@ -1,4 +1,6 @@
-if(NOT DEFINED multobjopt_version_template OR
+if(NOT DEFINED multobjopt_config_template OR
+   NOT DEFINED multobjopt_config_output OR
+   NOT DEFINED multobjopt_version_template OR
    NOT DEFINED multobjopt_version_output OR
    NOT DEFINED multobjopt_source_dir OR
    NOT DEFINED multobjopt_project_version)
@@ -71,8 +73,16 @@ endif()
 
 if(multobjopt_version_from_git)
     set(multobjopt_library_version "${multobjopt_git_description}")
+    set(multobjopt_version_from_git_integer 1)
 else()
     set(multobjopt_library_version "${multobjopt_project_version}")
+    set(multobjopt_version_from_git_integer 0)
+endif()
+
+if(multobjopt_git_dirty)
+    set(multobjopt_git_dirty_integer 1)
+else()
+    set(multobjopt_git_dirty_integer 0)
 endif()
 
 function(multobjopt_escape_cpp_string input_value output_variable)
@@ -101,10 +111,19 @@ multobjopt_escape_cpp_string(
     multobjopt_git_branch_cpp)
 
 get_filename_component(
+    multobjopt_config_output_directory
+    "${multobjopt_config_output}"
+    DIRECTORY)
+get_filename_component(
     multobjopt_version_output_directory
     "${multobjopt_version_output}"
     DIRECTORY)
+file(MAKE_DIRECTORY "${multobjopt_config_output_directory}")
 file(MAKE_DIRECTORY "${multobjopt_version_output_directory}")
+configure_file(
+    "${multobjopt_config_template}"
+    "${multobjopt_config_output}"
+    @ONLY)
 configure_file(
     "${multobjopt_version_template}"
     "${multobjopt_version_output}"

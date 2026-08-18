@@ -8,6 +8,7 @@
  * Applications may include this file for the original single-header include
  * experience, or include one of the focused headers directly:
  *
+ * - config.hpp for preprocessor semantic and Git version macros;
  * - types.hpp for fundamental definitions and callbacks;
  * - problem.hpp for problem construction and validation;
  * - options.hpp for optimiser configuration;
@@ -21,6 +22,7 @@
  * no declarations of its own.
  */
 
+#include <multobjopt/config.hpp>
 #include <multobjopt/evaluation.hpp>
 #include <multobjopt/optimize.hpp>
 #include <multobjopt/options.hpp>

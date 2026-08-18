@@ -1,0 +1,56 @@
+#ifndef MULTOBJOPT_CONFIG_HPP
+#define MULTOBJOPT_CONFIG_HPP
+
+/**
+ * @file config.hpp
+ * @brief Preprocessor macros for the multobjopt semantic and Git versions.
+ *
+ * CMake generates this header for every build. Semantic-version macros are
+ * stable for a release. The library-version and Git macros describe the exact
+ * source checkout when Git metadata is available, including a `-dirty` suffix
+ * when the working tree has changes.
+ */
+
+/** @brief Semantic major version declared by the CMake project. */
+#define MULTOBJOPT_VERSION_MAJOR @multobjopt_project_version_major@
+
+/** @brief Semantic minor version declared by the CMake project. */
+#define MULTOBJOPT_VERSION_MINOR @multobjopt_project_version_minor@
+
+/** @brief Semantic patch version declared by the CMake project. */
+#define MULTOBJOPT_VERSION_PATCH @multobjopt_project_version_patch@
+
+/** @brief Stable semantic version string declared by the CMake project. */
+#define MULTOBJOPT_VERSION_STRING "@multobjopt_project_version_cpp@"
+
+/** @brief Descriptive alias for MULTOBJOPT_VERSION_STRING. */
+#define MULTOBJOPT_SEMANTIC_VERSION MULTOBJOPT_VERSION_STRING
+
+/**
+ * @brief Most descriptive available version string for this library build.
+ *
+ * This is MULTOBJOPT_GIT_DESCRIPTION when MULTOBJOPT_VERSION_FROM_GIT is 1,
+ * otherwise MULTOBJOPT_VERSION_STRING.
+ */
+#define MULTOBJOPT_LIBRARY_VERSION "@multobjopt_library_version_cpp@"
+
+/** @brief 1 when Git metadata was read from a valid HEAD commit, otherwise 0. */
+#define MULTOBJOPT_VERSION_FROM_GIT @multobjopt_version_from_git_integer@
+
+/**
+ * @brief Output of `git describe --tags --always`, including `-dirty` if needed.
+ *
+ * The string is empty when MULTOBJOPT_VERSION_FROM_GIT is 0.
+ */
+#define MULTOBJOPT_GIT_DESCRIPTION "@multobjopt_git_description_cpp@"
+
+/** @brief Full Git commit identifier, or an empty string when unavailable. */
+#define MULTOBJOPT_GIT_COMMIT "@multobjopt_git_commit_cpp@"
+
+/** @brief Git branch name, `HEAD` when detached, or an empty string. */
+#define MULTOBJOPT_GIT_BRANCH "@multobjopt_git_branch_cpp@"
+
+/** @brief 1 when working-tree changes were detected, otherwise 0. */
+#define MULTOBJOPT_GIT_DIRTY @multobjopt_git_dirty_integer@
+
+#endif

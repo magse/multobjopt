@@ -132,10 +132,11 @@ growing collection of complete buildable examples.
 @section headers Public header layout
 
 Applications can include `multobjopt/multobjopt.hpp` for the complete API.
-Focused self-contained headers are also available: `types.hpp`, `problem.hpp`,
-`options.hpp`, `result.hpp`, `evaluation.hpp`, `optimize.hpp`, and
-`reporting.hpp`. Their file
+Focused self-contained headers are also available: `config.hpp`, `types.hpp`,
+`problem.hpp`, `options.hpp`, `result.hpp`, `evaluation.hpp`, `optimize.hpp`,
+and `reporting.hpp`. Their file
 documentation describes callback lifetimes, units, validation, feasibility,
-and result ownership in detail. Generated `version.hpp` exposes the semantic
-version and, when available, Git description, commit, branch, and dirty state.
+and result ownership in detail. Generated `config.hpp` exposes semantic and Git
+information as preprocessor macros; `version.hpp` mirrors those values as C++
+constants, including the description, commit, branch, and dirty state.
 */

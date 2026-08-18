@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
     multobjopt
-    VERSION 0.1.2
+    VERSION 0.1.0
     DESCRIPTION "Dependency-free multi-objective optimisation for bounded engineering design problems"
     LANGUAGES CXX
 )
@@ -95,6 +95,10 @@ set(
     "${CMAKE_CURRENT_BINARY_DIR}/generated/include"
 )
 set(
+    multobjopt_config_header
+    "${multobjopt_generated_include_dir}/multobjopt/config.hpp"
+)
+set(
     multobjopt_version_header
     "${multobjopt_generated_include_dir}/multobjopt/version.hpp"
 )
@@ -105,6 +109,8 @@ endif()
 
 set(
     multobjopt_version_generator_arguments
+    "-Dmultobjopt_config_template=${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.hpp.in"
+    "-Dmultobjopt_config_output=${multobjopt_config_header}"
     "-Dmultobjopt_version_template=${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in"
     "-Dmultobjopt_version_output=${multobjopt_version_header}"
     "-Dmultobjopt_source_dir=${CMAKE_CURRENT_SOURCE_DIR}"
@@ -123,7 +129,7 @@ execute_process(
     RESULT_VARIABLE multobjopt_version_generation_result
 )
 if(NOT multobjopt_version_generation_result EQUAL 0)
-    message(FATAL_ERROR "failed to generate multobjopt/version.hpp")
+    message(FATAL_ERROR "failed to generate multobjopt version headers")
 endif()
 
 add_custom_target(
@@ -132,13 +138,24 @@ add_custom_target(
         ${CMAKE_COMMAND}
         ${multobjopt_version_generator_arguments}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_version_header.cmake
-    BYPRODUCTS ${multobjopt_version_header}
-    COMMENT "Refreshing multobjopt Git version header"
+    BYPRODUCTS
+        ${multobjopt_config_header}
+        ${multobjopt_version_header}
+    COMMENT "Refreshing multobjopt Git version headers"
     VERBATIM
 )
 add_dependencies(multobjopt multobjopt_generate_version_header)
-set_source_files_properties(${multobjopt_version_header} PROPERTIES GENERATED TRUE)
-target_sources(multobjopt PRIVATE ${multobjopt_version_header})
+set_source_files_properties(
+    ${multobjopt_config_header}
+    ${multobjopt_version_header}
+    PROPERTIES GENERATED TRUE
+)
+target_sources(
+    multobjopt
+    PRIVATE
+        ${multobjopt_config_header}
+        ${multobjopt_version_header}
+)
 
 target_compile_features(multobjopt PUBLIC cxx_std_20)
 target_include_directories(
@@ -203,7 +220,9 @@ install(
 )
 
 install(
-    FILES ${multobjopt_version_header}
+    FILES
+        ${multobjopt_config_header}
+        ${multobjopt_version_header}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/multobjopt
 )
 

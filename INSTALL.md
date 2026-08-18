@@ -75,23 +75,31 @@ Using `CMAKE_PREFIX_PATH` is therefore usually more portable.
 
 ## Read the installed library version
 
-The installed package includes its generated version header:
+The installed package includes generated config and version headers. Use the
+config macros for preprocessor checks and the C++ constants in ordinary code:
 
 ```cpp
+#include <multobjopt/config.hpp>
 #include <multobjopt/version.hpp>
 
 #include <iostream>
 
+#if MULTOBJOPT_VERSION_MAJOR == 0 && MULTOBJOPT_VERSION_MINOR < 1
+#error "multobjopt 0.1 or newer is required"
+#endif
+
 int main() {
-    std::cout << multobjopt::version::library_version << '\n';
+    std::cout << MULTOBJOPT_LIBRARY_VERSION << '\n';
 }
 ```
 
-`library_version` contains the Git description recorded when the library was
-built, including a `-dirty` suffix when applicable. Use `semantic_version` for
-compatibility checks that should ignore Git metadata. Source archives without
-a Git commit, including vendored copies without their own `.git` entry, use the
-CMake project version for both values.
+`MULTOBJOPT_LIBRARY_VERSION` and `multobjopt::version::library_version` contain
+the Git description recorded when the library was built, including a `-dirty`
+suffix when applicable. Use `MULTOBJOPT_VERSION_STRING` or
+`multobjopt::version::semantic_version` for compatibility checks that should
+ignore Git metadata. Source archives without a Git commit, including vendored
+copies without their own `.git` entry, use the CMake project version for both
+values.
 
 ## Optional result files
 

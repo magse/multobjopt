@@ -1,9 +1,11 @@
+#include <multobjopt/config.hpp>
 #include <multobjopt/evaluation.hpp>
 #include <multobjopt/reporting.hpp>
 #include <multobjopt/version.hpp>
 
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 int main() {
@@ -25,7 +27,13 @@ int main() {
     std::ostringstream summary;
     multobjopt::write_summary_json(summary, problem, result);
 
-    return design.valid && design.feasible && design.objectives[0] == 0.25 &&
+    constexpr std::string_view semantic_version{MULTOBJOPT_VERSION_STRING};
+    constexpr std::string_view library_version{MULTOBJOPT_LIBRARY_VERSION};
+
+    return MULTOBJOPT_VERSION_MAJOR == 0 && MULTOBJOPT_VERSION_MINOR == 1 &&
+                   MULTOBJOPT_VERSION_PATCH == 0 && semantic_version == "0.1.0" &&
+                   library_version == multobjopt::version::library_version && design.valid &&
+                   design.feasible && design.objectives[0] == 0.25 &&
                    summary.str().find("multobjopt.optimization_summary") != std::string::npos &&
                    !multobjopt::version::library_version.empty()
                ? 0

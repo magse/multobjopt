@@ -7,8 +7,8 @@ int main() {
 
     test.check(multobjopt::version::major == 0, "version.hpp exposes the semantic major version");
     test.check(multobjopt::version::minor == 1, "version.hpp exposes the semantic minor version");
-    test.check(multobjopt::version::patch == 2, "version.hpp exposes the semantic patch version");
-    test.check(multobjopt::version::semantic_version == "0.1.2",
+    test.check(multobjopt::version::patch == 0, "version.hpp exposes the semantic patch version");
+    test.check(multobjopt::version::semantic_version == "0.1.0",
                "version.hpp exposes the configured semantic version");
     test.check(!multobjopt::version::library_version.empty(),
                "version.hpp always exposes a usable library version");

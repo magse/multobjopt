@@ -84,6 +84,7 @@ Smaller components can include a focused, self-contained header instead:
 
 | Header | Contents |
 | --- | --- |
+| `config.hpp` | Generated semantic-version and Git-revision macros |
 | `types.hpp` | Scalar aliases, callback types, enums, and parameter/objective/restriction definitions |
 | `problem.hpp` | Fluent problem construction, stored definitions, and validation |
 | `options.hpp` | Common and method-specific optimizer settings |
@@ -91,18 +92,28 @@ Smaller components can include a focused, self-contained header instead:
 | `evaluation.hpp` | Design normalization, direct evaluation, and Pareto dominance |
 | `optimize.hpp` | Automatic selection, optimization dispatch, and enum names |
 | `reporting.hpp` | Opt-in CSV/TSV evaluation and Pareto writers plus JSON summaries |
-| `version.hpp` | Generated semantic version and Git revision metadata |
+| `version.hpp` | Type-safe C++ semantic version and Git revision metadata |
 
 The umbrella header only includes these focused headers; it adds no second set
 of declarations. Every public header has detailed Doxygen documentation and can
 be compiled independently.
 
-The generated version header exposes `multobjopt::version::library_version`,
-`semantic_version`, `git_description`, `git_commit`, `git_branch`, and
-`git_dirty`. When the project root contains a Git checkout with at least one
-commit, `library_version` is derived from `git describe --tags --always`.
-Source archives, vendored copies without their own `.git` entry, and
-repositories without a commit fall back to the CMake project version.
+The generated config header exposes the numeric
+`MULTOBJOPT_VERSION_MAJOR`, `MULTOBJOPT_VERSION_MINOR`, and
+`MULTOBJOPT_VERSION_PATCH` macros, the stable `MULTOBJOPT_VERSION_STRING`, and
+the descriptive `MULTOBJOPT_LIBRARY_VERSION`. It also provides
+`MULTOBJOPT_VERSION_FROM_GIT`, `MULTOBJOPT_GIT_DESCRIPTION`,
+`MULTOBJOPT_GIT_COMMIT`, `MULTOBJOPT_GIT_BRANCH`, and
+`MULTOBJOPT_GIT_DIRTY`; the two flags are literal `0` or `1` for use in
+preprocessor conditions. `MULTOBJOPT_SEMANTIC_VERSION` is a descriptive alias
+for `MULTOBJOPT_VERSION_STRING`.
+
+The version header mirrors those values as `multobjopt::version` constants.
+When the project root contains a Git checkout with at least one commit,
+`library_version` and `MULTOBJOPT_LIBRARY_VERSION` are derived from
+`git describe --tags --always`. Source archives, vendored copies without their
+own `.git` entry, and repositories without a commit fall back to the CMake
+project version.
 
 ## Problem semantics
 

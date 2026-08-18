@@ -32,6 +32,7 @@ set(multobjopt_test_names
     32_test_version_header
     34_test_evaluation_history
     35_test_reporting
+    36_test_config_header
 )
 
 set(multobjopt_algorithm_tests
