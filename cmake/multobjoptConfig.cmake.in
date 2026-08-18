@@ -3,4 +3,3 @@
 include("${CMAKE_CURRENT_LIST_DIR}/multobjoptTargets.cmake")
 
 check_required_components(multobjopt)
-

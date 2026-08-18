@@ -75,6 +75,11 @@ evaluated_design evaluate_unchecked(const problem& problem_definition, scalar_vi
         violation = std::numeric_limits<scalar>::infinity();
     }
 
+    // Invoke the final gate only after both raw result arrays are complete. It
+    // intentionally receives results rather than parameters, allowing coupled
+    // assembly rules to reuse model outputs without recomputing them. The call
+    // still occurs after a non-finite scalar result so callback order remains
+    // predictable; returning true can never restore numerical validity.
     const bool accepted_by_validator =
         !problem_definition.validation() ||
         problem_definition.validation()(evaluation.objectives, evaluation.restrictions);

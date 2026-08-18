@@ -30,6 +30,8 @@ set(multobjopt_test_names
     30_test_evaluation_header
     31_test_optimize_header
     32_test_version_header
+    34_test_evaluation_history
+    35_test_reporting
 )
 
 set(multobjopt_algorithm_tests
@@ -47,6 +49,7 @@ set(multobjopt_algorithm_tests
     22_test_tiny_budgets
     23_test_box_feasibility_search
     24_test_validity_scale_and_status
+    34_test_evaluation_history
 )
 
 foreach(test_name IN LISTS multobjopt_test_names)

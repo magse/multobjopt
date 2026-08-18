@@ -16,6 +16,9 @@ making changes.
 - Public problem, option, evaluation, selection, dispatch, and enum-formatting
   operations each have a focused snake-case source file under `src/`. Overloads
   of one logical method, such as `problem::add_parameter`, stay together.
+- `include/multobjopt/reporting.hpp` and its focused implementation files
+  provide explicit dependency-free CSV, TSV, and JSON post-processing. Solver
+  entry points themselves remain silent and do not own application file paths.
 - Evaluator methods and shared optimizer operations each have focused source
   files; `src/detail/optimizer_detail.hpp` declares their internal contracts.
 - Each optimization algorithm has one focused entry-point source file. Reusable
@@ -23,8 +26,11 @@ making changes.
   `src/detail/`.
 - `examples/` contains short executable demonstrations. It can be built either
   as part of this repository or against an installed `multobjopt` package. The
-  current examples are an initial set intended to grow with focused engineering
-  use cases.
+  focused API and engineering examples are accompanied by numbered Wikipedia
+  benchmark transcriptions; the collection is intended to keep growing.
+- `EXAMPLE.md` is the developer walkthrough for a minimal problem and the
+  feature-rich coupled-validation pattern. Keep its complete code consistent
+  with the public API and the corresponding programs under `examples/`.
 - `tests/` contains plain, independently compiled CTest programs and the
   installed-package consumer test.
 - `docs/` and `Doxyfile.in` provide the generated API documentation.
@@ -49,6 +55,12 @@ directories.
   upper bound is not an additional grid point.
 - One evaluation means one complete design evaluation, irrespective of the
   number of callbacks. No algorithm may exceed `max_evaluations`.
+- Optional evaluation history records every completed evaluation in exact
+  chronological order through the shared evaluator. It must not filter repeats,
+  infeasible designs, validator rejections, or returned non-finite values.
+- Report output is opt-in and deterministic. Keep table schemas, round-trip
+  scalar formatting, JSON non-finite handling, README examples, and reporting
+  tests consistent when adding fields.
 - Fixed seeds, stable tie-breaking, and deterministic result ordering are part
   of the testable behavior.
 - Automatic algorithm selection is a documented structural heuristic. Keep
@@ -93,7 +105,7 @@ cmake --build build-library --parallel
 
 When adding tests:
 
-- Use the next numbered filename, such as `34_test_new_contract.cpp`.
+- Use the next numbered filename, such as `36_test_new_contract.cpp`.
 - Keep one self-contained `main()` per test and use `test_support.hpp`; do not
   add a test framework.
 - Use fixed random seeds and assert invariants or tolerant quality thresholds,

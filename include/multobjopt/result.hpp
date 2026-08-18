@@ -83,6 +83,17 @@ struct optimization_result {
 
     /** Stop condition, or no_feasible_design when the feasible archive is empty. */
     termination_reason reason{termination_reason::evaluation_limit};
+
+    /**
+     * Optional complete search trajectory in chronological evaluation order.
+     *
+     * The vector is empty unless optimizer_options::record_evaluation_history
+     * was enabled. When enabled, its size equals evaluations and element
+     * `index` is complete evaluation number `index + 1`. Each entry owns the
+     * normalized parameters and all raw callback values, including entries for
+     * infeasible or numerically invalid designs.
+     */
+    std::vector<evaluated_design> evaluation_history;
 };
 
 } // namespace multobjopt

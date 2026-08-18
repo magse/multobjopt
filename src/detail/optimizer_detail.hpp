@@ -98,6 +98,12 @@ class evaluator {
     /** @brief Return the Pareto archive in deterministic objective order. */
     [[nodiscard]] std::vector<evaluated_design> archive() const;
 
+    /**
+     * @brief Return the optional trajectory in chronological evaluation order.
+     * @return Owning records retained only when history recording was enabled.
+     */
+    [[nodiscard]] const std::vector<evaluated_design>& evaluation_history() const noexcept;
+
   private:
     /** @brief Insert a feasible design while preserving nondominance and uniqueness. */
     void update_archive(const evaluated_design& candidate);
@@ -109,6 +115,7 @@ class evaluator {
     evaluated_design best_;
     std::vector<evaluated_design> archive_;
     std::size_t archive_revision_{0};
+    std::vector<evaluated_design> evaluation_history_;
 };
 
 /** @brief Return the normalized midpoint of every parameter interval. */

@@ -10,16 +10,18 @@
 > from OpenAI Codex using the GPT model `gpt-5.6-sol` at the `ultra`
 > reasoning-effort level.
 
-> **Merged projects:** The code in this library is a GPT assisted merge from
-> three previous 10+ years old in-house and public projects related to optimization
-> algorithms.
-
 `multobjopt` is a dependency-free C++20 library for bounded, constrained,
 multi-objective engineering optimization. A problem is assembled from scalar
 parameters, objective functions, restriction functions, and an optional final
 validation function. The same problem can be solved with simulated annealing,
 a genetic algorithm, Box's complex method, or gradient descent using numerical
 gradients. The library can also select a method automatically.
+
+A distinctive part of the problem model is the coupled overall validator. It
+runs after all scalar objectives and restrictions for a candidate are known and
+can make one final system-level acceptance decision from that complete output
+state. This is useful for assembly compatibility and cross-result rules that do
+not have a natural scalar violation distance.
 
 The library is intended for designing mechatronic machinery, such as robot
 arms.
@@ -88,6 +90,7 @@ Smaller components can include a focused, self-contained header instead:
 | `result.hpp` | Owning evaluated-design and optimization-result records |
 | `evaluation.hpp` | Design normalization, direct evaluation, and Pareto dominance |
 | `optimize.hpp` | Automatic selection, optimization dispatch, and enum names |
+| `reporting.hpp` | Opt-in CSV/TSV evaluation and Pareto writers plus JSON summaries |
 | `version.hpp` | Generated semantic version and Git revision metadata |
 
 The umbrella header only includes these focused headers; it adds no second set
@@ -102,6 +105,82 @@ Source archives, vendored copies without their own `.git` entry, and
 repositories without a commit fall back to the CMake project version.
 
 ## Problem semantics
+
+### Construction and callback order
+
+`problem` stores definitions in the order in which they are added. That order
+is part of the model contract, not merely a presentation detail. During one
+complete design evaluation the library:
+
+1. clamps and quantizes parameters, preserving parameter declaration order;
+2. calls every objective in objective declaration order;
+3. calls every restriction in restriction declaration order; and
+4. calls the optional overall validator once, after both output vectors are
+   complete.
+
+Objective and restriction callbacks receive normalized parameter values in
+parameter declaration order. The validator receives the raw scalar outputs
+exactly as returned by the objective and restriction callbacks, again in their
+respective declaration order. Objective sense, objective weight, restriction
+scale, and violation aggregation do not alter the values passed to it.
+
+| Callback kind | Receives | Returns | Primary role |
+| --- | --- | --- | --- |
+| Objective | Normalized parameters | Scalar performance value | Quantity to minimize or maximize |
+| Restriction | Normalized parameters | Scalar margin, feasible at `>= 0` | Requirement with a useful violation distance |
+| Overall validator | All raw objective and restriction values | `bool` | Final coupled system or assembly acceptance |
+
+For models with several indexed inputs and outputs, use named index constants
+or enums beside the problem construction. This makes callback indexing
+reviewable and reduces maintenance errors when a definition is inserted or
+reordered:
+
+```cpp
+enum parameter_index : std::size_t {
+    link_length_parameter,
+    payload_parameter,
+};
+enum objective_index : std::size_t {
+    mass_objective,
+    cycle_time_objective,
+};
+enum restriction_index : std::size_t {
+    torque_reserve_restriction,
+    stress_reserve_restriction,
+};
+
+problem design;
+design
+    .add_parameter("link_length", 0.3, 1.2)
+    .add_parameter("payload", 1.0, 20.0)
+    // Objective indices follow this declaration order.
+    .add_objective("mass", objective_sense::minimize,
+                   [](scalar_view p) {
+                       return 4.0 * p[link_length_parameter] +
+                              0.2 * p[payload_parameter];
+                   })
+    .add_objective("cycle_time", objective_sense::minimize,
+                   [](scalar_view p) {
+                       return 0.5 + 0.04 * p[payload_parameter];
+                   })
+    // Restriction values are margins: zero or positive is feasible.
+    .add_restriction("torque_reserve", [](scalar_view p) {
+        return 30.0 - p[link_length_parameter] * p[payload_parameter];
+    })
+    .add_restriction("stress_reserve", [](scalar_view p) {
+        return 80.0 - 5.0 * p[link_length_parameter] * p[payload_parameter];
+    })
+    .set_validation([](scalar_view objectives, scalar_view restrictions) {
+        // These are raw outputs in the two declaration orders above. This
+        // lookup-like assembly rule is a Boolean gate, not a distance.
+        const bool catalog_drive_package_is_available =
+            objectives[cycle_time_objective] <= 1.0
+                ? restrictions[torque_reserve_restriction] >= 2.0
+                : objectives[mass_objective] <= 7.0 &&
+                      restrictions[stress_reserve_restriction] >= 5.0;
+        return catalog_drive_package_is_available;
+    });
+```
 
 Parameters have inclusive lower and upper bounds. A resolution of zero means a
 continuous parameter. A positive resolution defines values on the lattice
@@ -131,22 +210,54 @@ infeasible designs, the optimizer minimizes the sum of violation magnitudes.
 Restrictions measured in different engineering units can set a positive
 `scale`; each violation is divided by that scale before aggregation.
 
-The optional overall validator runs after all objective and restriction
-callbacks. It receives the objective values and restriction values in their
-declaration order and can reject a coupled design:
+### Overall validation versus scalar restrictions
+
+The coupled overall validator is a distinctive final layer above the ordinary
+scalar callbacks. Use a scalar restriction when the model has a meaningful
+margin or distance to acceptance. That magnitude helps rank and repair
+infeasible designs. Use the optional overall validation function for a final
+Boolean gate such as a coupled assembly rule, a permitted component
+combination, controller/system compatibility, or acceptance logic involving
+several already-computed objective and restriction outputs. It is especially
+useful when rejection is clear but assigning a physically meaningful scalar
+distance is artificial.
+
+The validator can be added or replaced with `set_validation()`:
 
 ```cpp
 design.set_validation(
     [](scalar_view objectives, scalar_view restrictions) {
+        // Raw values, indexed in objective and restriction declaration order.
         return objectives[0] <= 12.0 && restrictions[1] >= 0.5;
     });
 ```
 
+For an otherwise finite design, returning `false` leaves
+`evaluated_design::valid` true, sets `feasible` to false, and adds one unit to
+`total_violation` in addition to any scalar-restriction violation. The fixed
+unit reflects that a Boolean gate provides no distance measure. The raw outputs
+remain available for diagnosis, but the rejected design cannot enter the
+feasible Pareto archive. Non-finite model outputs still make the design invalid
+regardless of what the validator returns.
+
+All objective and restriction callbacks run before validation unless one
+throws, so validation does not short-circuit an expensive analysis. Prefer to
+make the final gate inexpensive and base it on the output spans instead of
+rerunning the simulation. One complete pass still counts as one design
+evaluation, irrespective of the number or cost of its callbacks.
+
+Callbacks and validators should be deterministic for a fixed input when
+repeatable optimization is required. Avoid observable side effects and do not
+make a later callback depend on mutation performed by an earlier callback;
+evaluation-history-dependent models undermine fixed-seed reproducibility. A
+cache or shared simulation object may be captured when useful, provided it
+does not change the returned model values for the same design. The problem owns
+copies of its callables, but none of them may retain a supplied `scalar_view`:
+the view and its storage are valid only until that callback returns.
+
 Non-finite callback values make a design invalid and infeasible, assigning it
 an infinite score and violation. A callback may instead throw to report a
-failed model evaluation; the exception propagates to the caller. Callbacks must
-not retain the supplied `scalar_view`, whose lifetime ends when the callback
-returns.
+failed model evaluation; the exception propagates to the caller.
 
 ## Algorithm selection
 
@@ -179,25 +290,113 @@ archive. For a multi-objective run, prefer the Pareto front over treating
 `no_feasible_design`; `evaluated_design::valid` distinguishes a numerically
 valid constraint violation from a failed/non-finite model evaluation.
 
+## Optional run reports
+
+`optimize()` does not open files or write to the console. Machine-readable
+reporting is an explicit post-processing operation, so existing applications
+produce no new output. Three independent writers are available:
+
+| Writer | Contents |
+| --- | --- |
+| `write_evaluation_history()` | Every completed design evaluation in chronological order as CSV or TSV |
+| `write_pareto_front()` | The final feasible nondominated archive as CSV or TSV |
+| `write_summary_json()` | Run metadata, result counts, and the named best design as JSON |
+
+Capturing every evaluation is also opt-in because a long run can retain much
+more data than its final Pareto archive:
+
+```cpp
+#include <multobjopt/multobjopt.hpp>
+
+#include <fstream>
+
+multobjopt::optimizer_options options;
+options.record_evaluation_history = true;
+
+const auto result = multobjopt::optimize(problem_definition, options);
+
+std::ofstream history{"run_evaluations.tsv"};
+multobjopt::write_evaluation_history(
+    history, problem_definition, result,
+    multobjopt::delimited_text_format::tsv);
+
+std::ofstream pareto{"run_pareto.tsv"};
+multobjopt::write_pareto_front(
+    pareto, problem_definition, result,
+    multobjopt::delimited_text_format::tsv);
+
+std::ofstream summary{"run_summary.json"};
+multobjopt::write_summary_json(summary, problem_definition, result);
+```
+
+`record_evaluation_history` defaults to `false`. When enabled,
+`result.evaluation_history[index]` is complete evaluation number `index + 1`
+and `evaluation_history.size() == evaluations`. This is an evaluation trace,
+not an algorithm-specific list of accepted moves or outer iterations: repeated
+points, infeasible points, overall-validator rejections, and non-finite values
+returned by callbacks are retained. A callback that throws does not complete
+an evaluation and therefore cannot produce a row. Capturing history does not
+change the evaluation budget, Pareto archive, ranking, or search decisions, but
+its memory use grows with the number and size of evaluations.
+
+Both table writers use definition names in their headers, normalized parameter
+values, raw objective and restriction values, validity and feasibility flags,
+aggregate violation, and the scalarized score. Rows use deterministic ordering
+and round-trip scalar precision. CSV/TSV quoting protects delimiters, quotes,
+and line breaks in user-defined names. The JSON summary is deterministic and
+represents non-finite scalar values as `null`, because JSON has no NaN or
+infinity number syntax.
+
+The Pareto and JSON writers need only the ordinary optimization result. The
+history writer additionally requires a result produced with history recording
+enabled. Writers accept `std::ostream`, so the application retains control over
+paths, overwrite policy, in-memory output, compression, and error handling;
+call only the reports required for a particular run.
+
 ## Examples
 
-The `examples` directory currently contains four focused programs, progressing
-from a small, smooth problem to a mechatronic machinery design problem:
+> **Start with the worked examples guide:** [EXAMPLE.md](EXAMPLE.md) develops
+> one minimal problem and one feature-rich mechatronic problem, including the
+> coupled final-validation pattern and result interpretation.
+
+The `examples` directory contains five focused API and engineering programs,
+covering small smooth problems, Pareto search, mechatronic machinery design,
+and optional machine-readable reporting:
 
 | Example | Kind of problem | What it demonstrates |
 | --- | --- | --- |
 | `01_basic_quadratic.cpp` | Smooth, unconstrained, continuous minimization | Explicit gradient descent using numerical gradients, an initial guess, and recovery of the known optimum `(1.5, -0.5)` |
 | `02_constrained_box.cpp` | Continuous sizing with a nonlinear restriction | Box's derivative-free complex method, the `restriction >= 0` convention, feasibility repair, and result inspection |
 | `03_multiobjective_pareto.cpp` | Two conflicting continuous objectives | Pareto-aware genetic search, the nondominated archive, and sampling representative trade-offs instead of treating one compromise as the only answer |
-| `04_mechatronic_discrete_auto.cpp` | Quantized mechatronic component selection | Gear, current, and arm parameters with resolutions; mixed minimize/maximize objectives; thermal, speed, and structural restrictions; overall validation; and automatic selection of the genetic algorithm |
+| `04_mechatronic_discrete_auto.cpp` | Quantized mechatronic component selection | Gear, current, and arm parameters with resolutions; mixed minimize/maximize objectives; thermal, speed, and structural restrictions; coupled validation of approved product packages; and automatic selection of the genetic algorithm |
+| `05_optional_reporting.cpp` | Small multi-objective reporting run | Default no-file behavior, optional evaluation-history capture, CSV or TSV trajectory and Pareto tables, and a JSON summary written after optimization |
 
-The examples use deterministic default seeds and print the selected method plus
-the most relevant design or Pareto values. They are deliberately small enough
-to serve as starting points for user-provided simulation callbacks.
+The directory also contains 43 individually buildable transcriptions of the
+[Wikipedia test-functions catalog](https://en.wikipedia.org/wiki/Test_functions_for_optimization).
+Their requested `WP01_...` through `WP43_...` numbering follows the catalog's
+display order:
 
-The current examples form a useful initial set, not an exhaustive catalog.
-Future additions will cover more algorithms, modeling patterns, and engineering
-design cases while keeping each example focused and buildable.
+| Files | Benchmark kind | Included functions |
+| --- | --- | --- |
+| `WP01_...`–`WP22_...` | Single-objective | Rastrigin through Shekel, including Ackley, Rosenbrock, Griewank, Himmelblau, Eggholder, and the other catalog entries |
+| `WP23_...`–`WP26_...` | Constrained single-objective | Rosenbrock with disk constraint, Mishra Bird, Townsend, and Keane bump |
+| `WP27_...`–`WP43_...` | Multi-objective, with and without constraints | Binh–Korn through Viennet, including Fonseca–Fleming, Kursawe, Schaffer, ZDT, Osyczka–Kundu, CTP1, and Constr-Ex |
+
+Each benchmark keeps its objective and restriction formulas in its own source
+file. A small shared runner provides deterministic settings, consistent output,
+and, where the catalog publishes one, an independent reference-design check.
+See [examples/wikipedia_benchmarks.md](examples/wikipedia_benchmarks.md) for the
+complete file inventory and the explicitly documented dimension and bounded-
+domain adaptations.
+
+All examples use deterministic seeds and print the selected method plus the
+most relevant design or Pareto values. They are deliberately small enough to
+serve as starting points for user-provided simulation callbacks.
+
+The current examples form a broad initial set, not a finished collection.
+Future additions will cover more algorithms, modeling patterns, benchmark
+families, and engineering design cases while keeping each example focused and
+buildable.
 
 The examples can be built with the repository, as shown below, or as a
 standalone CMake project against an installed library. See

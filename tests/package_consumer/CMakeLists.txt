@@ -7,4 +7,3 @@ find_package(multobjopt CONFIG REQUIRED)
 add_executable(multobjopt_package_consumer main.cpp)
 target_link_libraries(multobjopt_package_consumer PRIVATE multobjopt::multobjopt)
 target_compile_features(multobjopt_package_consumer PRIVATE cxx_std_20)
-

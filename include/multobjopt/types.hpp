@@ -60,14 +60,38 @@ using scalar_function = std::function<scalar(scalar_view)>;
 /**
  * @brief User-supplied overall design validation callback.
  *
- * The first view contains raw objective values and the second contains raw
- * restriction values, each in definition insertion order. Every objective and
- * restriction has already been evaluated before this callback is invoked.
- * Returning false rejects the design independently of scalar restrictions.
+ * For each complete design evaluation, the library invokes every objective
+ * callback in objective insertion order, then every restriction callback in
+ * restriction insertion order, and finally invokes this validator once. The
+ * first view contains the complete objective vector in that same objective
+ * order; the second contains the complete restriction vector in restriction
+ * order. Neither view is the parameter vector: the validator operates on the
+ * complete computed output state.
  *
- * Both spans and their elements are temporary, read-only views valid only for
- * the duration of the call. Copy any data that must outlive the callback.
- * Exceptions are allowed to propagate from evaluate_design() or optimize().
+ * Values are raw callback results. Objective senses and weights have not been
+ * applied, and restriction tolerance and scale have not transformed the
+ * restriction values. The validator is still invoked if a scalar callback
+ * returned NaN or infinity, so code that performs arithmetic on the views
+ * should check finiteness when necessary. Such a nonfinite scalar result makes
+ * the evaluated design numerically invalid regardless of the Boolean returned
+ * here.
+ *
+ * Returning false is a final veto: a numerically valid design remains valid but
+ * becomes infeasible independently of its scalar restriction margins. Because
+ * a Boolean result provides no continuous distance to acceptance, rejection
+ * contributes one unit to total violation when the numerical evaluation is
+ * otherwise finite. Returning true only withholds this veto; it cannot make a
+ * design with a negative restriction margin or nonfinite result feasible.
+ * Prefer an ordinary scalar restriction when a meaningful signed margin exists,
+ * because that margin gives optimizers more useful infeasibility information.
+ *
+ * Both spans, their iterators, and their elements are temporary read-only views
+ * valid only until the callback returns. Copy values that must outlive the call
+ * and never retain a view or pointer into its storage. Optimizers may evaluate
+ * many designs, including repeated designs, so deterministic, side-effect-free
+ * callbacks are strongly recommended for reproducible results. Exceptions are
+ * not translated or caught; they propagate from evaluate_design() or
+ * optimize(), and that complete design evaluation does not return a result.
  */
 using validation_function = std::function<bool(scalar_view, scalar_view)>;
 

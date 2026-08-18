@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
     multobjopt
-    VERSION 0.1.0
+    VERSION 0.1.2
     DESCRIPTION "Dependency-free multi-objective optimisation for bounded engineering design problems"
     LANGUAGES CXX
 )
@@ -52,6 +52,7 @@ add_library(
     src/evaluator_can_evaluate.cpp
     src/evaluator_constructor.cpp
     src/evaluator_evaluate.cpp
+    src/evaluator_evaluation_history.cpp
     src/evaluator_evaluations.cpp
     src/evaluator_update_archive.cpp
     src/finish_result.cpp
@@ -59,6 +60,15 @@ add_library(
     src/midpoint.cpp
     src/random_point.cpp
     src/starting_point.cpp
+
+    # Optional completed-run report serialization.
+    src/reporting_delimited.cpp
+    src/reporting_format.cpp
+    src/reporting_json.cpp
+    src/reporting_validate.cpp
+    src/write_evaluation_history.cpp
+    src/write_pareto_front.cpp
+    src/write_summary_json.cpp
 
     # Public selection, dispatch, and enum formatting operations.
     src/optimization_algorithm_to_string.cpp

@@ -101,12 +101,34 @@ class problem {
 
     /**
      * @brief Set, replace, or clear the optional overall validation callback.
-     * @param validation Callable receiving objective then restriction values.
-     *        Passing an empty std::function clears the validator.
+     * @param validation Callable receiving separate objective and restriction
+     *        spans. Passing an empty std::function clears the current validator.
      * @return This problem, enabling fluent calls.
      *
-     * The callback is stored and invoked only after all scalar callbacks for a
-     * design have completed.
+     * This function only stores the callable; it does not evaluate the problem.
+     * During each later complete design evaluation, all objectives run first in
+     * objective insertion order, all restrictions run next in restriction
+     * insertion order, and this validator runs last. Its first span contains
+     * every raw objective result in objective order, and its second span contains
+     * every raw restriction result in restriction order. Objective senses and
+     * weights, restriction scales, and constraint tolerance are not applied to
+     * these values.
+     *
+     * The validator is invoked even when a preceding scalar callback produced a
+     * nonfinite raw value. Nonfinite scalar results make the design numerically
+     * invalid regardless of the returned Boolean. For otherwise finite results,
+     * returning false leaves the design numerically valid but rejects its
+     * feasibility. Since a Boolean veto supplies no distance to acceptance, it
+     * adds one unit to total violation. Returning true cannot override a negative
+     * restriction margin or otherwise turn an invalid or infeasible design into
+     * a feasible one.
+     *
+     * Both spans are temporary, read-only views valid only for that invocation;
+     * the callback must not retain the spans, their iterators, or pointers to
+     * their elements. Exceptions thrown during later invocation propagate from
+     * evaluate_design() or optimize(). Prefer deterministic, side-effect-free
+     * validation so repeated evaluations and fixed random seeds remain
+     * reproducible.
      */
     problem& set_validation(validation_function validation);
 

@@ -131,6 +131,16 @@ struct optimizer_options {
     scalar minimum_step_scale{1.0e-10};
 
     /**
+     * Retain every completed design evaluation in the optimization result.
+     *
+     * This is disabled by default so ordinary runs do not pay the potentially
+     * significant memory cost of keeping the complete search trajectory. When
+     * enabled, optimization_result::evaluation_history contains one owning
+     * evaluated_design for every counted evaluation, in evaluation order.
+     */
+    bool record_evaluation_history{false};
+
+    /**
      * @brief Validate every common and method-specific option.
      *
      * The full structure is checked even when the selected algorithm does not

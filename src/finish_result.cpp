@@ -29,6 +29,7 @@ optimization_result finish_result(optimization_algorithm algorithm,
     result.evaluations = problem_evaluator.evaluations();
     result.iterations = iterations;
     result.reason = result.pareto_front.empty() ? termination_reason::no_feasible_design : reason;
+    result.evaluation_history = problem_evaluator.evaluation_history();
     return result;
 }
 

@@ -22,6 +22,51 @@ selection. The public API is declared in the @ref multobjopt namespace.
 - Optionally use multobjopt::problem::set_validation() for final acceptance
   based on all objective and restriction results.
 
+@section coupled_validation Coupled final validation
+
+The optional overall validator is a system-level acceptance gate. It runs once
+per design, after every objective and scalar restriction callback has produced
+its raw value. Its first multobjopt::scalar_view contains objective values in
+objective declaration order; its second view contains restriction values in
+restriction declaration order. These are result values, not parameter values.
+
+This is useful when final assembly acceptance depends on several already
+computed outputs. For example, a machine may require both a payload-to-mass
+ratio and a combined reserve across thermal and structural margins:
+
+@code{.cpp}
+constexpr std::size_t moving_mass_index = 0;
+constexpr std::size_t payload_index = 1;
+constexpr std::size_t thermal_margin_index = 0;
+constexpr std::size_t structural_margin_index = 2;
+
+problem_definition.set_validation(
+    [](multobjopt::scalar_view objectives,
+       multobjopt::scalar_view restrictions) {
+        const auto moving_mass = objectives[moving_mass_index];
+        const auto payload = objectives[payload_index];
+        const auto combined_reserve =
+            restrictions[thermal_margin_index] +
+            restrictions[structural_margin_index];
+        return payload >= moving_mass && combined_reserve >= 20.0;
+    });
+@endcode
+
+Use scalar restrictions for requirements with a meaningful violation distance;
+their negative margins guide an infeasible search toward feasibility. Use the
+validator for a final Boolean rule whose useful distance is unavailable or
+whose inputs are the complete callback result set. Returning false does not
+change numerical validity, but makes an otherwise valid design infeasible.
+Because the validator has no scalar distance, rejection contributes one unit
+to aggregate violation. The validator may still receive a non-finite raw
+callback result; returning true cannot restore that design's numerical
+validity.
+
+The supplied views are temporary and must not be retained. Keep callbacks
+deterministic and free of externally visible side effects when reproducible
+optimization is required. Exceptions are not translated and propagate to the
+caller. See the repository `EXAMPLE.md` for a complete annotated use case.
+
 @section running Running an optimization
 
 Configure multobjopt::optimizer_options and pass the problem to
@@ -47,6 +92,40 @@ for (const auto& design : result.pareto_front) {
 }
 @endcode
 
+@section reporting Optional run reporting
+
+Optimization itself performs no file or console output. Applications can
+write the final Pareto archive with multobjopt::write_pareto_front() and a JSON
+run summary with multobjopt::write_summary_json(). Both are explicit
+post-processing calls accepting a caller-owned `std::ostream`.
+
+Set multobjopt::optimizer_options::record_evaluation_history before optimizing
+when a complete chronological trace is needed. The returned
+multobjopt::optimization_result::evaluation_history then owns one entry per
+completed evaluation, including repeats, infeasible candidates, validation
+vetoes, and non-finite callback results. This history describes callback
+evaluations rather than accepted algorithm moves or outer iterations. It is
+disabled by default to avoid memory proportional to the complete run.
+
+@code{.cpp}
+multobjopt::optimizer_options options;
+options.record_evaluation_history = true;
+const auto result = multobjopt::optimize(problem_definition, options);
+
+std::ofstream evaluations{"run_evaluations.csv"};
+multobjopt::write_evaluation_history(
+    evaluations, problem_definition, result,
+    multobjopt::delimited_text_format::csv);
+
+std::ofstream summary{"run_summary.json"};
+multobjopt::write_summary_json(summary, problem_definition, result);
+@endcode
+
+CSV and TSV tables contain normalized parameters, raw callback values, and
+derived validity, feasibility, violation, and scalarized-score fields. The JSON
+summary uses `null` for non-finite scalar values. No report is produced unless
+the corresponding writer is called.
+
 See the repository README and the current programs under `examples/` for a
 growing collection of complete buildable examples.
 
@@ -54,7 +133,8 @@ growing collection of complete buildable examples.
 
 Applications can include `multobjopt/multobjopt.hpp` for the complete API.
 Focused self-contained headers are also available: `types.hpp`, `problem.hpp`,
-`options.hpp`, `result.hpp`, `evaluation.hpp`, and `optimize.hpp`. Their file
+`options.hpp`, `result.hpp`, `evaluation.hpp`, `optimize.hpp`, and
+`reporting.hpp`. Their file
 documentation describes callback lifetimes, units, validation, feasibility,
 and result ownership in detail. Generated `version.hpp` exposes the semantic
 version and, when available, Git description, commit, branch, and dirty state.

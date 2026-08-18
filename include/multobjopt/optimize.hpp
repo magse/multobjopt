@@ -44,18 +44,25 @@ namespace multobjopt {
  * method recorded in optimization_result::algorithm_used. Each counted
  * evaluation is one complete set of objective, restriction, and optional
  * validation calls, regardless of the number of callbacks, and the result never
- * exceeds optimizer_options::max_evaluations.
+ * exceeds optimizer_options::max_evaluations. This function performs no file
+ * or console output; completed results can be passed explicitly to the writers
+ * declared in reporting.hpp.
  *
  * @param problem_definition Problem and callbacks to evaluate. It must remain
  *        alive and must not be mutated for the duration of this synchronous call.
  * @param options Common and method-specific controls. The default options use
  *        automatic selection and deterministic default seed.
- * @return Owning best-design, Pareto-front, accounting, and termination data.
+ * @return Owning best-design, Pareto-front, accounting, termination data, and
+ *         optional evaluation history when its recording option was enabled.
  *
  * @throws std::invalid_argument If the problem, options, or initial guess is
  *         invalid or inconsistent.
  * @throws Any exception emitted by an objective, restriction, or validation
  *         callback; callback exceptions are deliberately not translated.
+ *
+ * @see write_evaluation_history
+ * @see write_pareto_front
+ * @see write_summary_json
  */
 [[nodiscard]] optimization_result optimize(const problem& problem_definition,
                                            const optimizer_options& options = {});

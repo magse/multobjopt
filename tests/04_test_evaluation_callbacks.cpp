@@ -4,8 +4,21 @@
 
 #include <vector>
 
+/**
+ * @file 04_test_evaluation_callbacks.cpp
+ * @brief Executable specification for callback data and execution order.
+ *
+ * This test is also a compact reference for developers implementing a coupled
+ * final validator. Scalar callbacks receive normalized parameters. The final
+ * validator instead receives the completed raw objective and restriction
+ * arrays, preserving declaration order within each category.
+ */
+
 int main() {
     test_support::test_context test;
+
+    // Recording small integer markers makes the cross-category order explicit:
+    // objectives first, restrictions second, and overall validation last.
     std::vector<int> call_order;
     bool callback_parameters_are_correct = true;
     bool validator_values_are_correct = false;
@@ -49,6 +62,10 @@ int main() {
         .set_validation(
             [&](multobjopt::scalar_view objectives, multobjopt::scalar_view restrictions) {
                 call_order.push_back(5);
+
+                // These indices are determined solely by add_objective() and
+                // add_restriction() order. A production model should give the
+                // indices names when its callback list is longer than this one.
                 validator_values_are_correct = objectives.size() == 2 && restrictions.size() == 2 &&
                                                objectives[0] == 1.0 && objectives[1] == 3.0 &&
                                                restrictions[0] == 2.0 && restrictions[1] == 1.0;

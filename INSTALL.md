@@ -93,10 +93,25 @@ compatibility checks that should ignore Git metadata. Source archives without
 a Git commit, including vendored copies without their own `.git` entry, use the
 CMake project version for both values.
 
+## Optional result files
+
+The installed library includes `multobjopt/reporting.hpp` and the same
+reporting API exposed by the umbrella header. No additional package or runtime
+dependency is required for CSV, TSV, or JSON output. Optimization itself does
+not create files; the consuming application opens an output stream and calls
+only the writers it needs after `optimize()` returns.
+
+To export every completed evaluation, set
+`optimizer_options::record_evaluation_history` before the run. Leave it at its
+default `false` when only the best design, final Pareto archive, or JSON summary
+is needed. See [README.md](README.md#optional-run-reports) for the output
+contracts and `examples/05_optional_reporting.cpp` for complete file handling.
+
 ## Build the examples against the installed package
 
 The examples directory is also a standalone CMake project. With an installed
-library, build all examples without rebuilding `multobjopt` itself:
+library, this builds the focused API/engineering programs and all numbered
+Wikipedia benchmark programs without rebuilding `multobjopt` itself:
 
 ```sh
 cmake -S examples -B build-examples \
@@ -112,7 +127,23 @@ single-configuration build with:
 ./build-examples/multobjopt_example_04_mechatronic_discrete_auto
 ```
 
-See [README.md](README.md#examples) for the purpose of each example.
+Run the optional reporting example without arguments to create no files, or
+pass a prefix and table format to create an evaluation table, Pareto table, and
+JSON summary after the optimization finishes:
+
+```sh
+./build-examples/multobjopt_example_05_optional_reporting run_01 tsv
+```
+
+Or run the first Wikipedia benchmark transcription with:
+
+```sh
+./build-examples/multobjopt_example_wp01_rastrigin
+```
+
+See [README.md](README.md#examples) for the purpose of each example and
+[EXAMPLE.md](EXAMPLE.md) for two annotated development walkthroughs, including
+the coupled overall-validation pattern.
 
 ## Verify an installation
 

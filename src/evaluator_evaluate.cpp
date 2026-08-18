@@ -17,7 +17,9 @@ namespace multobjopt::detail {
  *
  * The accounting unit is one complete design evaluation, independent of the
  * number of objective and restriction callbacks. The counter advances exactly
- * once after all callbacks return normally.
+ * once after all callbacks return normally. Optional history capture happens
+ * at this common boundary, so every algorithm records the same normalized,
+ * fully evaluated representation without changing its search decisions.
  */
 evaluated_design evaluator::evaluate(scalar_view parameters) {
     if (!can_evaluate()) {
@@ -25,6 +27,11 @@ evaluated_design evaluator::evaluate(scalar_view parameters) {
     }
 
     auto result = evaluate_unchecked(problem_, parameters, options_.constraint_tolerance);
+    if (options_.record_evaluation_history) {
+        // Preserve repeats and rejected/invalid designs: the history describes
+        // work performed, whereas the Pareto archive deliberately filters it.
+        evaluation_history_.push_back(result);
+    }
     ++evaluations_;
 
     if (!has_best_ || rank_before(result, best_)) {

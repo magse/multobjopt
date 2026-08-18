@@ -13,7 +13,8 @@
  * - options.hpp for optimiser configuration;
  * - result.hpp for owning evaluation and optimisation records;
  * - evaluation.hpp for normalization, evaluation, and dominance helpers;
- * - optimize.hpp for algorithm selection and optimisation.
+ * - optimize.hpp for algorithm selection and optimisation;
+ * - reporting.hpp for optional CSV, TSV, and JSON serialization;
  * - version.hpp for compile-time semantic and Git build information.
  *
  * All focused headers are self-contained. This umbrella intentionally contains
@@ -24,6 +25,7 @@
 #include <multobjopt/optimize.hpp>
 #include <multobjopt/options.hpp>
 #include <multobjopt/problem.hpp>
+#include <multobjopt/reporting.hpp>
 #include <multobjopt/result.hpp>
 #include <multobjopt/types.hpp>
 #include <multobjopt/version.hpp>
