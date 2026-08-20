@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
     multobjopt
-    VERSION 0.1.0
+    VERSION 0.1.2
     DESCRIPTION "Dependency-free multi-objective optimisation for bounded engineering design problems"
     LANGUAGES CXX
 )
@@ -199,6 +199,10 @@ if(MULTOBJOPT_BUILD_DOCUMENTATION)
         COMMENT "Generating multobjopt API documentation"
         VERBATIM
     )
+    if(PROJECT_IS_TOP_LEVEL)
+        add_custom_target(docs)
+        add_dependencies(docs multobjopt_documentation)
+    endif()
     add_dependencies(
         multobjopt_documentation
         multobjopt_generate_version_header

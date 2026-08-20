@@ -31,7 +31,7 @@ int main() {
     constexpr std::string_view library_version{MULTOBJOPT_LIBRARY_VERSION};
 
     return MULTOBJOPT_VERSION_MAJOR == 0 && MULTOBJOPT_VERSION_MINOR == 1 &&
-                   MULTOBJOPT_VERSION_PATCH == 0 && semantic_version == "0.1.0" &&
+                   MULTOBJOPT_VERSION_PATCH == 2 && semantic_version == "0.1.2" &&
                    library_version == multobjopt::version::library_version && design.valid &&
                    design.feasible && design.objectives[0] == 0.25 &&
                    summary.str().find("multobjopt.optimization_summary") != std::string::npos &&

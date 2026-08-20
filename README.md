@@ -462,11 +462,18 @@ with `-DCMAKE_PREFIX_PATH=/path/to/prefix`.
 ## API documentation
 
 The public headers contain Doxygen comments. Generate the HTML API reference
-with:
+with an out-of-source build. Doxygen must be installed and discoverable by
+CMake.
 
 ```sh
-cmake -S . -B build-docs -DMULTOBJOPT_BUILD_DOCUMENTATION=ON
-cmake --build build-docs --target multobjopt_documentation
+cmake -S . -B build-docs \
+  -DMULTOBJOPT_BUILD_DOCUMENTATION=ON \
+  -DMULTOBJOPT_BUILD_TESTS=OFF \
+  -DMULTOBJOPT_BUILD_EXAMPLES=OFF
+cmake --build build-docs --target docs
 ```
 
-The documentation entry point is `docs/mainpage.dox`.
+The `multobjopt_documentation` target remains available as the descriptive
+project-specific name. Generated HTML starts at
+`build-docs/docs/html/index.html`; the documentation source entry point is
+`docs/mainpage.dox`.

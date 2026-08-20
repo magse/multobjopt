@@ -50,10 +50,10 @@ function(generate_test_header source_directory)
             "-Dmultobjopt_version_output=${test_header}"
             "-Dmultobjopt_source_dir=${source_directory}"
             "-Dmultobjopt_git_executable=${multobjopt_git_executable}"
-            "-Dmultobjopt_project_version=0.1.0"
+            "-Dmultobjopt_project_version=0.1.2"
             "-Dmultobjopt_project_version_major=0"
             "-Dmultobjopt_project_version_minor=1"
-            "-Dmultobjopt_project_version_patch=0"
+            "-Dmultobjopt_project_version_patch=2"
             -P "${multobjopt_project_source_dir}/cmake/generate_version_header.cmake"
         RESULT_VARIABLE generation_result
         OUTPUT_VARIABLE generation_output
@@ -98,13 +98,13 @@ require_config_header_pattern(
     "#define MULTOBJOPT_VERSION_MINOR 1"
     "the semantic minor version")
 require_config_header_pattern(
-    "#define MULTOBJOPT_VERSION_PATCH 0"
+    "#define MULTOBJOPT_VERSION_PATCH 2"
     "the semantic patch version")
 require_config_header_pattern(
-    "#define MULTOBJOPT_VERSION_STRING \"0\\.1\\.0\""
+    "#define MULTOBJOPT_VERSION_STRING \"0\\.1\\.2\""
     "the semantic version string")
 require_config_header_pattern(
-    "#define MULTOBJOPT_LIBRARY_VERSION \"0\\.1\\.0\""
+    "#define MULTOBJOPT_LIBRARY_VERSION \"0\\.1\\.2\""
     "the semantic fallback library version")
 require_config_header_pattern(
     "#define MULTOBJOPT_VERSION_FROM_GIT 0"

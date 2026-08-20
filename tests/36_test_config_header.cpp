@@ -15,8 +15,8 @@
 #endif
 
 #if MULTOBJOPT_VERSION_MAJOR != 0 || MULTOBJOPT_VERSION_MINOR != 1 ||                            \
-    MULTOBJOPT_VERSION_PATCH != 0
-#error "config.hpp semantic version macros do not match version 0.1.0"
+    MULTOBJOPT_VERSION_PATCH != 2
+#error "config.hpp semantic version macros do not match version 0.1.2"
 #endif
 
 #if (MULTOBJOPT_VERSION_FROM_GIT != 0 && MULTOBJOPT_VERSION_FROM_GIT != 1) ||                     \
@@ -34,7 +34,7 @@ int main() {
     constexpr std::string_view git_commit{MULTOBJOPT_GIT_COMMIT};
     constexpr std::string_view git_branch{MULTOBJOPT_GIT_BRANCH};
 
-    test.check(version_string == "0.1.0", "config.hpp exposes the semantic version string");
+    test.check(version_string == "0.1.2", "config.hpp exposes the semantic version string");
     test.check(semantic_version == version_string,
                "the descriptive semantic-version macro aliases the version string");
     test.check(!library_version.empty(), "config.hpp always exposes a library version");

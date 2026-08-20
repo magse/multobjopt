@@ -5,9 +5,16 @@
 
 multobjopt solves bounded engineering design problems with one or more scalar
 objectives, scalar restrictions, and an optional coupled validation callback.
-It provides simulated annealing, a Pareto-aware genetic algorithm, Box's
-complex method, projected numerical-gradient descent, and structural automatic
-selection. The public API is declared in the @ref multobjopt namespace.
+The package provides four concrete optimization algorithms:
+
+- [Simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing)
+- [Pareto-aware genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm)
+- Box's complex method
+  ([derivative-free optimization background](https://en.wikipedia.org/wiki/Derivative-free_optimization))
+- [Projected numerical-gradient descent](https://en.wikipedia.org/wiki/Gradient_descent)
+
+It can also select among them automatically based on the validated problem
+structure. The public API is declared in the @ref multobjopt namespace.
 
 @section model Problem model
 
